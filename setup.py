@@ -1,10 +1,10 @@
 from setuptools import setup
 
 setup(
-    name="electrum-server",
+    name="electrum-dash-server",
     version="1.0",
-    scripts=['run_electrum_server.py','electrum-server'],
-    install_requires=['plyvel','jsonrpclib', 'irc >= 11, <=14.0'],
+    scripts=['run_electrum_dash_server','electrum-dash-server'],
+    install_requires=['plyvel','jsonrpclib', 'irc >= 11, <=14.0', 'x11_hash'],
     package_dir={
         'electrumserver':'src'
         },
@@ -21,10 +21,10 @@ setup(
         'electrumserver.ircthread',
         'electrumserver.stratum_tcp'
     ],
-    description="Bitcoin Electrum Server",
-    author="Thomas Voegtlin",
-    author_email="thomasv@electrum.org",
+    description="Dash Electrum Server",
+    author="Thomas Voegtlin ,ELM4ever, Propulsion, TheLazieR",
+    author_email="thomasv@electrum.org, thelazier@gmail.com",
     license="MIT Licence",
-    url="https://github.com/spesmilo/electrum-server/",
-    long_description="""Server for the Electrum Lightweight Bitcoin Wallet"""
+    url="https://github.com/spesmilo/electrum-server/ , https://github.com/thelazier/electrum-dash-server/",
+    long_description="""Server for the Electrum Lightweight Dash Wallet"""
 )

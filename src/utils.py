@@ -26,6 +26,7 @@ import threading
 import time
 import hashlib
 import struct
+import x11_hash
 
 __b58chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 __b58base = len(__b58chars)
@@ -38,6 +39,9 @@ SCRIPT_ADDRESS = 5
 def rev_hex(s):
     return s.decode('hex')[::-1].encode('hex')
 
+
+# Use Dash's X11 Hash Function
+HashX11 = lambda x: x11_hash.getPoWHash(x)
 
 Hash = lambda x: hashlib.sha256(hashlib.sha256(x).digest()).digest()
 

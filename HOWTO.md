@@ -1,18 +1,18 @@
-How to run your own Electrum server
-===================================
+How to run your own Electrum Dash server
+========================================
 
 Abstract
 --------
 
 This document is an easy to follow guide to installing and running your own
-Electrum server on Linux. It is structured as a series of steps you need to
+Electrum Dash server on Linux. It is structured as a series of steps you need to
 follow, ordered in the most logical way. The next two sections describe some
 conventions we use in this document and the hardware, software, and expertise
 requirements.
 
 The most up-to date version of this document is available at:
 
-    https://github.com/spesmilo/electrum-server/blob/master/HOWTO.md
+    https://github.com/dashpay/electrum-dash-server/blob/master/HOWTO.md
 
 Conventions
 -----------
@@ -20,8 +20,8 @@ Conventions
 In this document, lines starting with a hash sign (#) or a dollar sign ($)
 contain commands. Commands starting with a hash should be run as root,
 commands starting with a dollar should be run as a normal user (in this
-document, we assume that user is called 'bitcoin'). We also assume the
-bitcoin user has sudo rights, so we use `$ sudo command` when we need to.
+document, we assume that user is called 'dash'). We also assume the
+dash user has sudo rights, so we use `$ sudo command` when we need to.
 
 Strings that are surrounded by "lower than" and "greater than" ( < and > )
 should be replaced by the user with something appropriate. For example,
@@ -54,16 +54,16 @@ Python libraries. Python 2.7 is the minimum supported version.
 
 **Hardware.** The lightest setup is a pruning server with diskspace
 requirements of about 30 GB for the Electrum database (February 2016). However note that
-you also need to run bitcoind and keep a copy of the full blockchain,
+you also need to run dashd and keep a copy of the full blockchain,
 which is roughly 55 GB (February 2016). Ideally you have a machine with 16 GB of RAM
-and an equal amount of swap. If you have ~2 GB of RAM make sure you limit bitcoind 
+and an equal amount of swap. If you have ~2 GB of RAM make sure you limit dashd 
 to 8 concurrent connections by disabling incoming connections. electrum-server may
 bail-out on you from time to time with less than 4 GB of RAM, so you might have to 
 monitor the process and restart it. You can tweak cache sizes in the config to an extend
 but most RAM will be used to process blocks and catch-up on initial start.
 
 CPU speed is less important than fast I/O speed. electrum-server makes uses of one core 
-only leaving spare cycles for bitcoind. Fast single core CPU power helps for the initial 
+only leaving spare cycles for dashd. Fast single core CPU power helps for the initial 
 block chain import. Any multi-core x86 CPU with CPU Mark / PassMark > 1500 will work
 (see https://www.cpubenchmark.net/). An ideal setup in February 2016 has 16 GB+ RAM and
 SSD for good i/o speed.
@@ -71,52 +71,48 @@ SSD for good i/o speed.
 Instructions
 ------------
 
-### Step 1. Create a user for running bitcoind and Electrum server
+### Step 1. Create a user for running dashd and Electrum Dash server
 
 This step is optional, but for better security and resource separation I
-suggest you create a separate user just for running `bitcoind` and Electrum.
+suggest you create a separate user just for running `dashd` and Electrum.
 We will also use the `~/bin` directory to keep locally installed files
 (others might want to use `/usr/local/bin` instead). We will download source
 code files to the `~/src` directory.
 
-    $ sudo adduser bitcoin --disabled-password
+    $ sudo adduser dash --disabled-password
     $ sudo apt-get install git
-    $ sudo su - bitcoin
+    $ sudo su - dash
     $ mkdir ~/bin ~/src
     $ echo $PATH
 
-If you don't see `/home/bitcoin/bin` in the output, you should add this line
+If you don't see `/home/dash/bin` in the output, you should add this line
 to your `.bashrc`, `.profile`, or `.bash_profile`, then logout and relogin:
 
     PATH="$HOME/bin:$PATH"
     $ exit
 
-### Step 2. Download bitcoind
+### Step 2. Download dashd
 
-We currently recommend bitcoin core 0.12.1 stable. If your package manager does not supply
-a recent bitcoind or you prefer to compile it yourself, here are some pointers for Ubuntu:
+Recommend downloading latest version directly from Dash.org
 
     $ sudo apt-get install make g++ python-leveldb libboost-all-dev libssl-dev libdb++-dev pkg-config libevent-dev
-    $ sudo su - bitcoin
-    $ cd ~/src && wget https://bitcoin.org/bin/bitcoin-core-0.12.1/bitcoin-0.12.1.tar.gz
-    $ sha256sum bitcoin-0.12.1.tar.gz | grep 08fc3b6c05c39fb975bba1f6dd49992df46511790ce8dc67398208af9565e199
-    $ tar xfz bitcoin-0.12.1.tar.gz
-    $ cd bitcoin-0.12.1
-    $ ./configure --disable-wallet --without-miniupnpc
-    $ make
-    $ strip src/bitcoind src/bitcoin-cli src/bitcoin-tx
-    $ cp -a src/bitcoind src/bitcoin-cli src/bitcoin-tx ~/bin
+    $ sudo su - dash
+    $ cd ~/src && wget https://www.dash.org/binaries/dash-0.12.0.57-linux64.tar.gz
+    $ sha256sum dash-0.12.0.57-linux64.tar.gz | grep 2a29b529c56d2ba41e28dfb20872861d6b48bdfe4fb327bfd2273123b38139aa
+    $ tar xfz dash-0.12.0.57-linux64.tar.gz
+    $ cd dash-0.12.0/bin
+    $ cp -a dashd dash-cli dash-tx ~/bin
 
-### Step 3. Configure and start bitcoind
+### Step 3. Configure and start dashd
 
-In order to allow Electrum to "talk" to `bitcoind`, we need to set up an RPC
-username and password for `bitcoind`. We will then start `bitcoind` and
+In order to allow Electrum Dash to "talk" to `dashd`, we need to set up an RPC
+username and password for `dashd`. We will then start `dashd` and
 wait for it to complete downloading the blockchain.
 
-    $ mkdir ~/.bitcoin
-    $ $EDITOR ~/.bitcoin/bitcoin.conf
+    $ mkdir ~/.dash
+    $ $EDITOR ~/.dash/dash.conf
 
-Write this in `bitcoin.conf`:
+Write this in `dash.conf`:
 
     rpcuser=<rpc-username>
     rpcpassword=<rpc-password>
@@ -124,47 +120,47 @@ Write this in `bitcoin.conf`:
     txindex=1
 
 
-If you have an existing installation of bitcoind and have not previously
+If you have an existing installation of dashd and have not previously
 set txindex=1 you need to reindex the blockchain by running
 
-    $ bitcoind -reindex
+    $ dashd -reindex
 
-If you already have a freshly indexed copy of the blockchain with txindex start `bitcoind`:
+If you already have a freshly indexed copy of the blockchain with txindex start `dashd`:
 
-    $ bitcoind
+    $ dashd
 
-Allow some time to pass for `bitcoind` to connect to the network and start
+Allow some time to pass for `dashd` to connect to the network and start
 downloading blocks. You can check its progress by running:
 
-    $ bitcoin-cli getblockchaininfo
+    $ dash-cli getblockchaininfo
 
-Before starting the Electrum server your bitcoind should have processed all
+Before starting the Electrum Dash server your dashd should have processed all
 blocks and caught up to the current height of the network (not just the headers).
-You should also set up your system to automatically start bitcoind at boot
-time, running as the 'bitcoin' user. Check your system documentation to
+You should also set up your system to automatically start dashd at boot
+time, running as the 'dash' user. Check your system documentation to
 find out the best way to do this.
 
-### Step 4. Download and install Electrum server
+### Step 4. Download and install Electrum Dash server
 
 We will download the latest git snapshot for Electrum to configure and install it:
 
     $ cd ~
-    $ git clone https://github.com/spesmilo/electrum-server.git
-    $ cd electrum-server
+    $ git clone https://github.com/dashpay/electrum-dash-server.git
+    $ cd electrum-dash-server
     $ sudo apt-get install python-setuptools
     $ sudo ./configure
     $ sudo python setup.py install
 
 See the INSTALL file for more information about the configure and install commands.
 
-### Optional Step 5: Install Electrum dependencies manually
+### Optional Step 5: Install Electrum Dash dependencies manually
 
-Electrum server depends on various standard Python libraries and leveldb. These will usually be
+Electrum Dash server depends on various standard Python libraries and leveldb. These will usually be
 installed by calling `python setup.py install` above. They can be also be installed with your
 package manager if you don't want to use the install routine.
 
     $ sudo apt-get install python-setuptools python-openssl python-leveldb libleveldb-dev
-    $ sudo easy_install jsonrpclib irc plyvel
+    $ sudo easy_install jsonrpclib irc plyvel x11_hash
 
 For the python irc module please note electrum-server currently only supports versions between 11 and 14.0. 
 The setup.py takes care of installing a supported version but be aware of it when installing or upgrading
@@ -177,7 +173,7 @@ leveldb should be at least version 1.9.0. Earlier version are believed to be bug
 
 ### Step 6. Select your limit
 
-Electrum server uses leveldb to store transactions. You can choose
+Electrum Dash server uses leveldb to store transactions. You can choose
 how many spent transactions per address you want to store on the server.
 The default is 100, but there are also servers with 1000 or even 10000.
 Few addresses have more than 10000 transactions. A limit this high
@@ -202,8 +198,8 @@ It's recommended that you fetch a pre-processed leveldb from the net.
 The "configure" script above will offer you to download a database with pruning limit 100.
 
 You can fetch recent copies of electrum leveldb databases with different pruning limits
-and further instructions from the Electrum full archival server foundry at:
-http://foundry.electrum.org/
+and further instructions from the Electrum Dash full archival server foundry at a later time.
+Sadly there is no host server for these files as of yet.:
 
 
 Alternatively, if you have the time and nerve, you can import the blockchain yourself.
@@ -258,7 +254,7 @@ When asked for a challenge password just leave it empty and press enter.
     $ openssl x509 -req -days 1825 -in server.csr -signkey server.key -out server.crt
 
 The server.crt file is your certificate suitable for the `ssl_certfile=` parameter and
-server.key corresponds to `ssl_keyfile=` in your Electrum server config.
+server.key corresponds to `ssl_keyfile=` in your Electrum Dash server config.
 
 Starting with Electrum 1.9, the client will learn and locally cache the SSL certificate
 for your server upon the first request to prevent man-in-the middle attacks for all
@@ -269,13 +265,13 @@ your server with a different server name and a new certificate.
 Therefore it's a good idea to make an offline backup copy of your certificate and key
 in case you need to restore them.
 
-### Step 9. Configure Electrum server
+### Step 9. Configure Electrum Dash server
 
-Electrum reads a config file (/etc/electrum.conf) when starting up. This
-file includes the database setup, bitcoind RPC setup, and a few other
+Electrum Dash reads a config file (/etc/electrum-dash.conf) when starting up. This
+file includes the database setup, dashd RPC setup, and a few other
 options.
 
-The "configure" script listed above will create a config file at /etc/electrum.conf
+The "configure" script listed above will create a config file at /etc/electrum-dash.conf
 which you can edit to modify the settings.
 
 Go through the config options and set them to your liking.
@@ -283,44 +279,44 @@ If you intend to run the server publicly have a look at README-IRC.md
 
 ### Step 10. Tweak your system for running electrum
 
-Electrum server currently needs quite a few file handles to use leveldb. It also requires
+Electrum Dash server currently needs quite a few file handles to use leveldb. It also requires
 file handles for each connection made to the server. It's good practice to increase the
 open files limit to 64k.
 
-The "configure" script will take care of this and ask you to create a user for running electrum-server.
-If you're using the user `bitcoin` to run electrum and have added it as shown in this document, run
+The "configure" script will take care of this and ask you to create a user for running electrum-dash-server.
+If you're using the user `dash` to run electrum and have added it as shown in this document, run
 the following code to add the limits to your /etc/security/limits.conf:
 
-     echo "bitcoin hard nofile 65536" >> /etc/security/limits.conf
-     echo "bitcoin soft nofile 65536" >> /etc/security/limits.conf
+     echo "dash hard nofile 65536" >> /etc/security/limits.conf
+     echo "dash soft nofile 65536" >> /etc/security/limits.conf
 
 If you are on Debian > 8.0 Jessie or another distribution based on it, you also need to add these lines in /etc/pam.d/common-session and /etc/pam.d/common-session-noninteractive otherwise the limits in /etc/security/limits.conf will not work:
 
     echo "session required pam_limits.so" >> /etc/pam.d/common-session
     echo "session required pam_limits.so" >> /etc/pam.d/common-session-noninteractive
 
-Check if the limits are changed either by logging with the user configured to run Electrum server as. Example:
+Check if the limits are changed either by logging with the user configured to run Electrum Dash server as. Example:
 
-    su - bitcoin
+    su - dash
     ulimit -n
 
 Or if you use sudo and the user is added to sudoers group:
 
-    sudo -u bitcoin -i ulimit -n
+    sudo -u dash -i ulimit -n
 
 
 Two more things for you to consider:
 
 1. To increase privacy of transactions going through your server
-   you may want to close bitcoind for incoming connections and connect outbound only. Most servers do run
+   you may want to close dashd for incoming connections and connect outbound only. Most servers do run
    full nodes with open incoming connections though.
 
-2. Consider restarting bitcoind (together with electrum-server) on a weekly basis to clear out unconfirmed
+2. Consider restarting dashd (together with electrum-server) on a weekly basis to clear out unconfirmed
    transactions from the local the memory pool which did not propagate over the network.
 
-### Step 11. (Finally!) Run Electrum server
+### Step 11. (Finally!) Run Electrum Dash server
 
-The magic moment has come: you can now start your Electrum server as root (it will su to your unprivileged user):
+The magic moment has come: you can now start your Electrum Dash server as root (it will su to your unprivileged user):
 
     # electrum-server start
 
@@ -329,7 +325,7 @@ unprivileged user.
 
 You should see this in the log file:
 
-    starting Electrum server
+    starting Electrum Dash server
 
 If your blockchain database is out of date Electrum Server will start updating it. You will see something similar to this in the log file:
 
@@ -337,7 +333,7 @@ If your blockchain database is out of date Electrum Server will start updating i
     
 The important pieces to you are at the end. In this example, the server has to calculate 240 more blocks, with an ETA of 11.5 hours. Multiple entries will appear below this one as the server catches back up to the latest block. During this time the server will not accept incoming connections from clients or connect to the IRC channel.
 
-If you want to stop Electrum server, use the 'stop' command:
+If you want to stop Electrum Dash server, use the 'stop' command:
 
     # electrum-server stop
 
@@ -349,7 +345,7 @@ safely whenever your machine is rebooted.
     # ln -s `which electrum-server` /etc/init.d/electrum-server
     # update-rc.d electrum-server defaults
 
-### Step 12. Test the Electrum server
+### Step 12. Test the Electrum Dash server
 
 We will assume you have a working Electrum client, a wallet, and some
 transaction history. You should start the client and click on the green
@@ -357,10 +353,10 @@ checkmark (last button on the right of the status bar) to open the Server
 selection window. If your server is public, you should see it in the list
 and you can select it. If you server is private, you need to enter its IP
 or hostname and the port. Press 'Ok' and the client will disconnect from the
-current server and connect to your new Electrum server. You should see your
+current server and connect to your new Electrum Dash server. You should see your
 addresses and transactions history. You can see the number of blocks and
 response time in the server selection window. You should send/receive some
-bitcoins to confirm that everything is working properly.
+dashs to confirm that everything is working properly.
 
 ### Step 13. Join us on IRC, subscribe to the server thread
 
@@ -368,7 +364,7 @@ Say hi to the dev crew, other server operators, and fans on
 irc.freenode.net #electrum and we'll try to congratulate you
 on supporting the community by running an Electrum node.
 
-If you're operating a public Electrum server please subscribe
+If you're operating a public Electrum Dash server please subscribe
 to or regularly check the following thread:
 https://bitcointalk.org/index.php?topic=85475.0
 It'll contain announcements about important updates to Electrum

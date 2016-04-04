@@ -1,14 +1,14 @@
 # Main network and testnet3 definitions
 
 params = {
-    'bitcoin_main': {
-        'pubkey_address': 0,
-        'script_address': 5,
-        'genesis_hash': '000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f'
+    'dash_main': {
+        'pubkey_address': 76, #Dash src/chainparams.cpp L169
+        'script_address': 16, #Dash src/chainparams.cpp L170
+        'genesis_hash': '00000ffd590b1485b3caadc19b22e6379c733355108f107a430458cdf3407ab6' #Darkcoin src/chainparams.cpp L161 
     },
-    'bitcoin_test': {
-        'pubkey_address': 111,
-        'script_address': 196,
-        'genesis_hash': '000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943'
+    'dash_test': {
+        'pubkey_address': 139, #Dash src/chainparams.cpp L238
+        'script_address': 19, #Dash src/chainparams.cpp L239
+        'genesis_hash': '00000bafbc94add76cb75e2ec92894837288a481e5c005f6563d91623bf8bc2c' #Darkcoin src/chainparams.cpp L227
     }
 }
