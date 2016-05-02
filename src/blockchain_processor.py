@@ -556,8 +556,7 @@ class BlockchainProcessor(Processor):
         # Masternode methods.
 
         elif method == 'masternode.announce.broadcast':
-            # masternodebroadcast expects a vector.
-            mn = '01' + str(params[0])
+            mn = str(params[0])
             result = self.dashd('masternodebroadcast', ['relay', mn])
 
         else:
