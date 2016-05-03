@@ -555,7 +555,7 @@ class BlockchainProcessor(Processor):
 
         # Masternode methods.
 
-        elif method == 'masternode.announce.broadcast':
+        elif method == 'blockchain.masternode.broadcast':
             mn = str(params[0])
             result = self.dashd('masternodebroadcast', ['relay', mn])
 
