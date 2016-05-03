@@ -553,6 +553,12 @@ class BlockchainProcessor(Processor):
             num = int(params[0])
             result = self.dashd('estimatefee', [num])
 
+        # Masternode methods.
+
+        elif method == 'blockchain.masternode.broadcast':
+            mn = str(params[0])
+            result = self.dashd('masternodebroadcast', ['relay', mn])
+
         else:
             raise BaseException("unknown method:%s" % method)
 
