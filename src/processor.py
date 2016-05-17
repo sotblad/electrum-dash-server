@@ -92,6 +92,9 @@ class Dispatcher:
         processor.dispatcher = self
         processor.shared = self.shared
         processor.start()
+        self.register_prefix(prefix, processor)
+
+    def register_prefix(self, prefix, processor):
         self.request_dispatcher.processors[prefix] = processor
 
 

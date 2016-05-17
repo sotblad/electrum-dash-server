@@ -28,6 +28,7 @@ class BlockchainProcessor(Processor):
         self.watch_lock = threading.Lock()
         self.watch_blocks = []
         self.watch_headers = []
+        self.watch_proposals = []
         self.watched_addresses = {}
 
         self.history_cache = {}
@@ -61,6 +62,7 @@ class BlockchainProcessor(Processor):
 
         self.sent_height = 0
         self.sent_header = None
+        self.sent_proposals_status = None
 
         # catch_up headers
         self.init_headers(self.storage.height)
@@ -348,6 +350,8 @@ class BlockchainProcessor(Processor):
         self.batch_txio[txo] = addr
 
 
+    def get_proposals_status(self):
+        return self.dashd('mnbudget', ['list'])
 
 
 
@@ -437,6 +441,10 @@ class BlockchainProcessor(Processor):
                 if session not in self.watch_headers:
                     self.watch_headers.append(session)
 
+            elif method == 'masternode.proposals.subscribe':
+                if session not in self.watch_proposals:
+                    self.watch_proposals.append(session)
+
             elif method == 'blockchain.address.subscribe':
                 address = params[0]
                 l = self.watched_addresses.get(address)
@@ -454,6 +462,9 @@ class BlockchainProcessor(Processor):
             elif method == 'blockchain.headers.subscribe':
                 if session in self.watch_headers:
                     self.watch_headers.remove(session)
+            elif method == 'masternode.proposals.subscribe':
+                if session in self.watch_proposals:
+                    self.watch_proposals.remove(session)
             elif method == "blockchain.address.subscribe":
                 addr = params[0]
                 l = self.watched_addresses.get(addr)
@@ -481,6 +492,9 @@ class BlockchainProcessor(Processor):
 
         elif method == 'blockchain.headers.subscribe':
             result = self.header
+
+        elif method == 'masternode.proposals.subscribe':
+            result = self.get_proposals_status()
 
         elif method == 'blockchain.address.subscribe':
             address = str(params[0])
@@ -555,9 +569,53 @@ class BlockchainProcessor(Processor):
 
         # Masternode methods.
 
-        elif method == 'blockchain.masternode.broadcast':
+        elif method == 'masternode.current':
+            result = self.dashd('masternode', ['current'])
+
+        elif method == 'masternode.count':
+            result = self.dashd('masternode', ['count'])
+        elif method == 'masternode.list':
+            result = self.dashd('masternode', ['list'])
+        elif method == 'masternode.winners':
+            result = self.dashd('masternode', ['winners'])
+
+        elif method == 'masternode.broadcast.announce':
             mn = str(params[0])
             result = self.dashd('masternodebroadcast', ['relay', mn])
+
+        elif method == 'masternode.masternodelist':
+            result = self.dashd('masternodelist', params)
+
+        # Masternode budget methods.
+
+        elif method == 'masternode.budget.list':
+            result = self.dashd('mnbudget', ['list'])
+
+        elif method == 'masternode.budget.nextblock':
+            result = self.dashd('mnbudget', ['nextblock'])
+        elif method == 'masternode.budget.nextsuperblocksize':
+            result = self.dashd('mnbudget', ['nextsuperblocksize'])
+
+        elif method == 'masternode.budget.getvotes':
+            proposal_hash = str(params[0])
+            result = self.dashd('mnbudget', ['getvotes', proposal_hash])
+        elif method == 'masternode.budget.getproposalhash':
+            proposal_name = str(params[0])
+            result = self.dashd('mnbudget', ['getproposalhash', proposal_name])
+        elif method == 'masternode.budget.getproposal':
+            proposal_hash = str(params[0])
+            result = self.dashd('mnbudget', ['getproposal', proposal_hash])
+
+        elif method == 'masternode.budget.projection':
+            result = self.dashd('mnbudget', ['projection'])
+
+        # Submit a budget proposal.
+        elif method == 'masternode.budget.submit':
+            result = self.dashd('mnbudget', ['submit'] + params)
+
+        # Submit a budget proposal vote.
+        elif method == 'masternode.budget.submitvote':
+            result = self.dashd('mnbudgetvoteraw', params)
 
         else:
             raise BaseException("unknown method:%s" % method)
@@ -815,6 +873,16 @@ class BlockchainProcessor(Processor):
                         'id': None,
                         'method': 'blockchain.headers.subscribe',
                         'params': [self.header],
+                        })
+
+        proposals_status = self.get_proposals_status()
+        if self.sent_proposals_status != proposals_status:
+            self.sent_proposals_status = proposals_status
+            for session in self.watch_proposals:
+                self.push_response(session, {
+                        'id': None,
+                        'method': 'masternode.proposals.subscribe',
+                        'params': [proposals_status],
                         })
 
         while True:
