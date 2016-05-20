@@ -4,7 +4,9 @@ setup(
     name="electrum-dash-server",
     version="0.9",
     scripts=['run_electrum_dash_server','electrum-dash-server'],
-    install_requires=['plyvel','jsonrpclib', 'irc>=11'],
+    install_requires=['plyvel','jsonrpclib', 'irc>=11', 'dash_hash'],
+    dependency_links=[
+        'git+https://github.com/dashpay/dash_hash#egg=dash_hash'],
     package_dir={
         'electrumserver':'src'
         },

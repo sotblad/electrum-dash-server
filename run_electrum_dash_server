@@ -256,6 +256,7 @@ if __name__ == '__main__':
     # Create and register processors
     chain_proc = BlockchainProcessor(config, shared)
     dispatcher.register('blockchain', chain_proc)
+    dispatcher.register_prefix('masternode', chain_proc)
 
     server_proc = ServerProcessor(config, shared)
     dispatcher.register('server', server_proc)
