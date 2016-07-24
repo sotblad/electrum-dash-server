@@ -49,6 +49,7 @@ class IrcThread(threading.Thread):
         self.host = options.get('host')
         self.report_host = options.get('report_host')
         self.nick = options.get('irc_nick')
+        self.irc_prefix = options.get('irc_prefix')
         if self.report_stratum_tcp_port:
             self.stratum_tcp_port = self.report_stratum_tcp_port
         if self.report_stratum_tcp_ssl_port:
@@ -57,9 +58,11 @@ class IrcThread(threading.Thread):
             self.host = self.report_host
         if not self.nick:
             self.nick = Hash(self.host)[:5].encode("hex")
+        if not self.irc_prefix:
+            self.irc_prefix = 'D_'
         self.pruning = True
         self.pruning_limit = config.get('leveldb', 'pruning_limit')
-        self.nick = 'D_' + self.nick
+        self.nick = self.irc_prefix + self.nick
         self.password = None
         self.who_queue = Queue.Queue()
 
@@ -88,17 +91,17 @@ class IrcThread(threading.Thread):
         connection.join("#electrum-dash")
 
     def on_join(self, connection, event):
-        m = re.match("(D_.*)!", event.source)
+        m = re.match("("+self.irc_prefix+".*)!", event.source)
         if m:
             self.who_queue.put((connection, m.group(1)))
 
     def on_quit(self, connection, event):
-        m = re.match("(D_.*)!", event.source)
+        m = re.match("("+self.irc_prefix+"..*)!", event.source)
         if m:
             self.queue.put(('quit', [m.group(1)]))
 
     def on_kick(self, connection, event):
-        m = re.match("(D_.*)", event.arguments[0])
+        m = re.match("("+self.irc_prefix+"..*)", event.arguments[0])
         if m:
             self.queue.put(('quit', [m.group(1)]))
 
@@ -120,7 +123,7 @@ class IrcThread(threading.Thread):
 
     def on_name(self, connection, event):
         for s in event.arguments[2].split():
-            if s.startswith("D_"):
+            if s.startswith(self.irc_prefix):
                 self.who_queue.put((connection, s))
 
     def who_thread(self):
