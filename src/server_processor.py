@@ -93,6 +93,9 @@ class ServerProcessor(Processor):
         elif method == 'server.version':
             result = VERSION
 
+        elif method == 'server.network':
+            result = self.config.get('network', 'type')
+
         else:
             raise BaseException("unknown method: %s"%repr(method))
 
