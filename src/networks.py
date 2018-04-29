@@ -3,8 +3,8 @@
 # Dash src/chainparams.cpp
 params = {
     'dash_main': {
-        'pubkey_address': 76, #L120
-        'script_address': 16, #L122
+        'pubkey_address': 16, #L120
+        'script_address': 76, #L122
         'genesis_hash': '00000ffd590b1485b3caadc19b22e6379c733355108f107a430458cdf3407ab6' #L110
     },
     'dash_test': {
