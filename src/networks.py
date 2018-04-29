@@ -5,7 +5,7 @@ params = {
     'dash_main': {
         'pubkey_address': 16, #L120
         'script_address': 76, #L122
-        'genesis_hash': '00000ffd590b1485b3caadc19b22e6379c733355108f107a430458cdf3407ab6' #L110
+        'genesis_hash': '000002acd994a815401fbaae0e52404b32857efd0b7b0c77b8e0715ccdd6d437' #L110
     },
     'dash_test': {
         'pubkey_address': 140, #L220
