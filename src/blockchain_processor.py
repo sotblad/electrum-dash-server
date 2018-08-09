@@ -79,11 +79,11 @@ class BlockchainProcessor(Processor):
             self.test_reorgs = False
         self.storage = Storage(config, shared, self.test_reorgs)
 
-        self.dashd_url = 'http://%s:%s@%s:%s/' % (
-            config.get('dashd', 'dashd_user'),
-            config.get('dashd', 'dashd_password'),
-            config.get('dashd', 'dashd_host'),
-            config.get('dashd', 'dashd_port'))
+        self.mued_url = 'http://%s:%s@%s:%s/' % (
+            config.get('mued', 'mued_user'),
+            config.get('mued', 'mued_password'),
+            config.get('mued', 'mued_host'),
+            config.get('mued', 'mued_port'))
 
         self.sent_height = 0
         self.sent_header = None
@@ -101,7 +101,7 @@ class BlockchainProcessor(Processor):
 
 
     def do_catch_up(self):
-        self.header = self.block2header(self.dashd('getblock', (self.storage.last_hash,)))
+        self.header = self.block2header(self.mued('getblock', (self.storage.last_hash,)))
         self.header['utxo_root'] = self.storage.get_root_hash().encode('hex')
         self.catch_up(sync=False)
         if not self.shared.stopped():
@@ -112,7 +112,7 @@ class BlockchainProcessor(Processor):
         while not self.shared.stopped():
             self.main_iteration()
             if self.shared.paused():
-                print_log("dashd is responding")
+                print_log("mued is responding")
                 self.shared.unpause()
             time.sleep(10)
 
@@ -135,7 +135,7 @@ class BlockchainProcessor(Processor):
             msg = "block %d (%d %.2fs) %s" %(self.storage.height, num_tx, delta, self.storage.get_root_hash().encode('hex'))
             msg += " (%.2ftx/s, %.2fs/block)" % (tx_per_second, seconds_per_block)
             run_blocks = self.storage.height - self.start_catchup_height
-            remaining_blocks = self.dashd_height - self.storage.height
+            remaining_blocks = self.mued_height - self.storage.height
             if run_blocks>0 and remaining_blocks>0:
                 remaining_minutes = remaining_blocks * seconds_per_block / 60
                 new_blocks = int(remaining_minutes / 10) # number of new blocks expected during catchup
@@ -145,28 +145,28 @@ class BlockchainProcessor(Processor):
                 msg += " (eta %s, %d blocks)" % (rt, remaining_blocks)
             print_log(msg)
 
-    def wait_on_dashd(self):
+    def wait_on_mued(self):
         self.shared.pause()
         time.sleep(10)
         if self.shared.stopped():
             # this will end the thread
             raise BaseException()
 
-    def dashd(self, method, params=()):
+    def mued(self, method, params=()):
         postdata = dumps({"method": method, 'params': params, 'id': 'jsonrpc'})
         while True:
             try:
-                response = urllib.urlopen(self.dashd_url, postdata)
+                response = urllib.urlopen(self.mued_url, postdata)
                 r = load(response)
                 response.close()
             except:
-                print_log("cannot reach dashd...")
-                self.wait_on_dashd()
+                print_log("cannot reach mued...")
+                self.wait_on_mued()
             else:
                 if r['error'] is not None:
                     if r['error'].get('code') == -28:
-                        print_log("dashd still warming up...")
-                        self.wait_on_dashd()
+                        print_log("mued still warming up...")
+                        self.wait_on_mued()
                         continue
                     raise BaseException(r['error'])
                 break
